@@ -1,62 +1,96 @@
-const fs = require('fs').promises;
-const path = require('path');
+// scripts/fetch-microcms.js - ESモジュール形式
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
+// ESモジュールでは __dirname が使えないため代替
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// 環境変数の取得
 const MICROCMS_SERVICE_DOMAIN = process.env.MICROCMS_SERVICE_DOMAIN;
 const MICROCMS_API_KEY = process.env.MICROCMS_API_KEY;
-const API_ENDPOINT = `https://${MICROCMS_SERVICE_DOMAIN}.microcms.io/api/v1/blog`;
 
+// 環境変数の検証
+if (!MICROCMS_SERVICE_DOMAIN || !MICROCMS_API_KEY) {
+  console.error('❌ Error: Required environment variables are missing');
+  console.error('   MICROCMS_SERVICE_DOMAIN:', MICROCMS_SERVICE_DOMAIN ? '✓' : '✗');
+  console.error('   MICROCMS_API_KEY:', MICROCMS_API_KEY ? '✓' : '✗');
+  process.exit(1);
+}
+
+/**
+ * microCMSからコンテンツを取得してMarkdownファイルを生成
+ */
 async function fetchMicroCMSContent() {
-  const response = await fetch(API_ENDPOINT, {
-    headers: {
-      'X-MICROCMS-API-KEY': MICROCMS_API_KEY
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`microCMS API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data.contents;
-}
-
-async function saveAsMarkdown(articles) {
-  const blogDir = path.join(process.cwd(), 'src', 'content', 'blog');
-  
-  // ディレクトリ作成
-  await fs.mkdir(blogDir, { recursive: true });
-
-  for (const article of articles) {
-    const { slug, title, pubDate, description, tags, body } = article;
-    
-    // Frontmatter生成
-    const frontmatter = `---
-title: "${title}"
-pubDate: ${pubDate}
-description: "${description || ''}"
-tags: [${tags ? tags.map(t => `"${t}"`).join(', ') : ''}]
----
-
-${body}
-`;
-
-    const filePath = path.join(blogDir, `${slug}.md`);
-    await fs.writeFile(filePath, frontmatter, 'utf-8');
-    console.log(`✅ Saved: ${slug}.md`);
-  }
-}
-
-(async () => {
   try {
-    console.log('📥 Fetching content from microCMS...');
-    const articles = await fetchMicroCMSContent();
+    console.log('📡 Fetching content from microCMS...');
+    console.log(`   Service: ${MICROCMS_SERVICE_DOMAIN}`);
     
-    console.log(`📝 Found ${articles.length} articles`);
-    await saveAsMarkdown(articles);
-    
-    console.log('✅ All content saved successfully!');
+    // microCMS API呼び出し（Node.js 18+の組み込みfetchを使用）
+    const response = await fetch(
+      `https://${MICROCMS_SERVICE_DOMAIN}.microcms.io/api/v1/blog`,
+      {
+        headers: {
+          'X-MICROCMS-API-KEY': MICROCMS_API_KEY,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`microCMS API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ Fetched ${data.contents.length} posts from microCMS`);
+
+    // 出力ディレクトリの確認・作成
+    const outputDir = path.join(__dirname, '../src/content/blog');
+    await fs.mkdir(outputDir, { recursive: true });
+
+    // 各記事をMarkdownファイルとして保存
+    for (const post of data.contents) {
+      const markdown = generateMarkdown(post);
+      const fileName = `${post.id}.md`;
+      const filePath = path.join(outputDir, fileName);
+      
+      await fs.writeFile(filePath, markdown, 'utf-8');
+      console.log(`   ✓ Generated: ${fileName}`);
+    }
+    console.log('🎉 All content fetched and saved successfully!');
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error fetching from microCMS:', error.message);
+    console.error('   Stack:', error.stack);
     process.exit(1);
   }
-})();
+}
+
+/**
+ * microCMSの記事データからMarkdownファイルを生成
+ * @param {Object} post - microCMSの記事データ
+ * @returns {string} Markdown形式の文字列
+ */
+function generateMarkdown(post) {
+  // タイトル内のダブルクォートをエスケープ
+  const title = (post.title || '').replace(/"/g, '\\"');
+  const description = (post.description || '').replace(/"/g, '\\"');
+  
+  // タグの処理（配列の場合は文字列に変換）
+  const tags = Array.isArray(post.tags) 
+    ? post.tags.map(tag => `"${tag}"`).join(', ')
+    : '[]';
+
+  return `---
+title: "${title}"
+pubDate: ${post.publishedAt || new Date().toISOString()}
+description: "${description}"
+tags: [${tags}]
+---
+
+${post.content || ''}
+`;
+}
+
+// スクリプト実行
+fetchMicroCMSContent();
