@@ -1,0 +1,59 @@
+name: microCMS to Astro Deployment
+
+on:
+  # microCMS Webhook トリガー
+  repository_dispatch:
+    types: [microcms-webhook]
+  
+  # 予約投稿用スケジュール（毎日 JST 00:00 = UTC 15:00前日）
+  schedule:
+    - cron: '0 15 * * *'  # UTC 15:00 = JST 00:00 (翌日)
+  
+  # 手動実行
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Fetch content from microCMS
+        env:
+          MICROCMS_SERVICE_DOMAIN: ${{ secrets.MICROCMS_SERVICE_DOMAIN }}
+          MICROCMS_API_KEY: ${{ secrets.MICROCMS_API_KEY }}
+        run: node scripts/fetch-microcms.js
+      
+      - name: Commit and Push Generated Markdown
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/content/blog/
+          git diff --cached --quiet || git commit -m "feat: Update blog content from microCMS [skip ci]"
+          git push
+      
+      - name: Post to Social Media
+        if: github.event_name == 'repository_dispatch'
+        env:
+          TUMBLR_CONSUMER_KEY: ${{ secrets.TUMBLR_CONSUMER_KEY }}
+          TUMBLR_CONSUMER_SECRET: ${{ secrets.TUMBLR_CONSUMER_SECRET }}
+          TUMBLR_OAUTH_TOKEN: ${{ secrets.TUMBLR_OAUTH_TOKEN }}
+          TUMBLR_OAUTH_TOKEN_SECRET: ${{ secrets.TUMBLR_OAUTH_TOKEN_SECRET }}
+          BLUESKY_IDENTIFIER: ${{ secrets.BLUESKY_IDENTIFIER }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+        run: node scripts/post-to-social.js
