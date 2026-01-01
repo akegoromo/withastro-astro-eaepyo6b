@@ -72,23 +72,24 @@ async function fetchMicroCMSContent() {
  * @returns {string} Markdown形式の文字列
  */
 function generateMarkdown(post) {
-  // タイトル内のダブルクォートをエスケープ
-  const title = (post.title || '').replace(/"/g, '\\"');
-  const description = (post.description || '').replace(/"/g, '\\"');
+  const title = post.title || 'Untitled';
+  const description = post.description || '';
+  const pubDate = post.publishedAt || post.createdAt;
+  const updatedDate = post.updatedAt || post.revisedAt;
+  const tags = Array.isArray(post.tags) ? post.tags : [];
   
-  // タグの処理（配列の場合は文字列に変換）
-  const tags = Array.isArray(post.tags) 
-    ? post.tags.map(tag => `"${tag}"`).join(', ')
-    : '[]';
-
+  // 🔧 修正: post.body (HTML形式) を使用
+  const body = post.body || '';  // ← 追加
+  
   return `---
-title: "${title}"
-pubDate: ${post.publishedAt || new Date().toISOString()}
-description: "${description}"
-tags: [${tags}]
+title: "${title.replace(/"/g, '\\"')}"
+description: "${description.replace(/"/g, '\\"')}"
+pubDate: "${pubDate}"
+${updatedDate ? `updatedDate: "${updatedDate}"` : ''}
+${tags.length > 0 ? `tags: [${tags.map(tag => `"${tag}"`).join(', ')}]` : 'tags: []'}
 ---
 
-${post.content || ''}
+${body}
 `;
 }
 
