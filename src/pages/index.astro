@@ -1,11 +1,43 @@
 ---
-import Welcome from '../components/Welcome.astro';
+import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// blog コレクションから全記事を取得
+const posts = await getCollection('blog');
+
+// 公開日でソート（新しい順）
+const sortedPosts = posts
+  .filter(post => post.data.pubDate <= new Date()) // 未来日は除外
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Blog">
+  <main style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+    <h1>Blog Posts</h1>
+    
+    {sortedPosts.length === 0 ? (
+      <p>No posts yet.</p>
+    ) : (
+      <ul style="list-style: none; padding: 0;">
+        {sortedPosts.map((post) => (
+          <li style="margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+            <a href={`/blog/${post.slug}/`} style="text-decoration: none; color: inherit;">
+              <h2 style="margin: 0 0 0.5rem 0; color: #0066cc;">
+                {post.data.title}
+              </h2>
+              <p style="margin: 0 0 0.5rem 0; color: #666;">
+                {post.data.description}
+              </p>
+              <time 
+                datetime={post.data.pubDate.toISOString()}
+                style="color: #999; font-size: 0.9rem;"
+              >
+                {post.data.pubDate.toLocaleDateString('ja-JP')}
+              </time>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </main>
 </Layout>

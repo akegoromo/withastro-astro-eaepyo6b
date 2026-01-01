@@ -1,0 +1,55 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+// 静的サイト生成用のパス一覧を返す
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+
+<Layout title={post.data.title}>
+  <article style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+    <header style="margin-bottom: 2rem; border-bottom: 2px solid #eee; padding-bottom: 1rem;">
+      <h1 style="margin: 0 0 0.5rem 0;">{post.data.title}</h1>
+      <p style="color: #666; margin: 0 0 0.5rem 0; font-size: 1.1rem;">
+        {post.data.description}
+      </p>
+      <time 
+        datetime={post.data.pubDate.toISOString()}
+        style="color: #999; font-size: 0.9rem;"
+      >
+        {post.data.pubDate.toLocaleDateString('ja-JP')}
+      </time>
+      
+      {post.data.tags && post.data.tags.length > 0 && (
+        <div class="tags" style="margin-top: 1rem;">
+          {post.data.tags.map((tag) => (
+            <span 
+              class="tag" 
+              style="display: inline-block; background: #e0e0e0; padding: 0.2rem 0.5rem; margin-right: 0.5rem; border-radius: 3px; font-size: 0.85rem;"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </header>
+    
+    <Content />
+    
+    <footer style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #eee;">
+      <a href="/" style="color: #0066cc; text-decoration: none;">
+        ← 記事一覧に戻る
+      </a>
+    </footer>
+  </article>
+</Layout>
