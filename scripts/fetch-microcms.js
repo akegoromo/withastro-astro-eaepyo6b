@@ -78,8 +78,8 @@ function generateMarkdown(post) {
   const updatedDate = post.updatedAt || post.revisedAt;
   const tags = Array.isArray(post.tags) ? post.tags : [];
   
-  // 🔧 修正: post.body (HTML形式) を使用
-  const body = post.body || '';  // ← 追加
+  // 🔧 修正: post.content (Markdown) を使用
+  const content = post.content || '';  // ← 変更
   
   return `---
 title: "${title.replace(/"/g, '\\"')}"
@@ -89,7 +89,7 @@ ${updatedDate ? `updatedDate: "${updatedDate}"` : ''}
 ${tags.length > 0 ? `tags: [${tags.map(tag => `"${tag}"`).join(', ')}]` : 'tags: []'}
 ---
 
-${body}
+${content}
 `;
 }
 
