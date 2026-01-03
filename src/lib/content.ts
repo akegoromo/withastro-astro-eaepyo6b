@@ -1,14 +1,21 @@
-/**
- * 環境判定
- * - MODE === 'production' → 本番環境
- * - それ以外 → Staging 環境
- */
+import { createClient } from 'microcms-js-sdk';
+
 const isProduction = import.meta.env.MODE === 'production';
 
-export const newtClient = createClient({
-  spaceUid: import.meta.env.NEWT_SPACE_UID,
-  token: isProduction
-    ? import.meta.env.NEWT_PRODUCTION_API_TOKEN  // CDN API Token
-    : import.meta.env.NEWT_PREVIEW_API_TOKEN,     // API Token (下書き含む)
-  apiType: isProduction ? 'cdn' : 'api',
+export const client = createClient({
+  serviceDomain: import.meta.env.MICROCMS_SERVICE_DOMAIN,
+  apiKey: import.meta.env.MICROCMS_API_KEY,
 });
+
+export async function getBlogPosts() {
+  const queries = isProduction
+    ? { filters: 'status[equals]published' } // Production: 公開のみ
+    : {}; // Staging: 下書き含む全て
+
+  const response = await client.get({
+    endpoint: 'blog',
+    queries,
+  });
+
+  return response.contents;
+}
