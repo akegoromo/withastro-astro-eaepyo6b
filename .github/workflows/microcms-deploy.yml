@@ -1,59 +1,194 @@
 name: microCMS to Astro Deployment
 
 on:
-  # microCMS Webhook トリガー
   repository_dispatch:
     types: [microcms-webhook]
-  
-  # 予約投稿用スケジュール（毎日 JST 00:00 = UTC 15:00前日）
   schedule:
-    - cron: '0 15 * * *'  # UTC 15:00 = JST 00:00 (翌日)
-  
-  # 手動実行
+    - cron: "0 15 * * *"
   workflow_dispatch:
-
-env:
-  NODE_VERSION: '20.x'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      TZ: 'Asia/Tokyo'
     
     steps:
+      # ===== 既存のビルド・デプロイステップ =====
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-      
+          node-version: '20'
+          cache: 'npm'
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Fetch content from microCMS
         env:
           MICROCMS_SERVICE_DOMAIN: ${{ secrets.MICROCMS_SERVICE_DOMAIN }}
           MICROCMS_API_KEY: ${{ secrets.MICROCMS_API_KEY }}
-        run: node scripts/fetch-microcms.js
-      
-      - name: Commit and Push Generated Markdown
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          node scripts/fetch-microcms.js
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add src/content/blog/
-          git diff --cached --quiet || git commit -m "feat: Update blog content from microCMS [skip ci]"
+          git diff --staged --quiet || git commit -m "chore: update content from microCMS [skip ci]"
           git push
-      
+
+      - name: Build Astro site
+        run: npm run build
+        env:
+          MODE: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: my-astro-site
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      # ===== SNS投稿 =====
       - name: Post to Social Media
+        id: sns_post
         if: github.event_name == 'repository_dispatch'
         env:
           TUMBLR_CONSUMER_KEY: ${{ secrets.TUMBLR_CONSUMER_KEY }}
           TUMBLR_CONSUMER_SECRET: ${{ secrets.TUMBLR_CONSUMER_SECRET }}
           TUMBLR_OAUTH_TOKEN: ${{ secrets.TUMBLR_OAUTH_TOKEN }}
-          TUMBLR_OAUTH_TOKEN_SECRET: ${{ secrets.TUMBLR_OAUTH_TOKEN_SECRET }}
+          TUMBLR_OAUTH_SECRET: ${{ secrets.TUMBLR_OAUTH_SECRET }}
           BLUESKY_IDENTIFIER: ${{ secrets.BLUESKY_IDENTIFIER }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
-        run: node scripts/post-to-social.js
+        run: |
+          node scripts/post-to-social.js > sns_result.txt 2>&1
+          echo "result<<EOF" >> $GITHUB_OUTPUT
+          cat sns_result.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # ===== ✅ Slack 通知ステップ(成功時) =====
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          ACTOR="${GITHUB_ACTOR}"
+          
+          if [ "$BRANCH_NAME" = "main" ]; then
+            WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL_PROD }}"
+            ENV_NAME="Production"
+            SITE_URL="https://example.com"
+          else
+            WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL_STAGING }}"
+            ENV_NAME="Staging"
+            SITE_URL="https://staging.example.com"
+          fi
+
+          # SNS投稿結果を取得
+          SNS_STATUS=""
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            SNS_STATUS="*SNS投稿:* Tumblr ✅ / Bluesky ✅"
+          fi
+
+          curl -X POST "$WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "text": "✅ '"$ENV_NAME"' デプロイ成功",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "✅ '"$ENV_NAME"' デプロイ成功"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*ブランチ:*\n'"$BRANCH_NAME"'"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*コミット:*\n`'"$COMMIT_SHA"'`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*実行者:*\n@'"$ACTOR"'"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*サイト URL:*\n<'"$SITE_URL"'|'"$SITE_URL"'>"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*コミットメッセージ:*\n'"$COMMIT_MSG"'\n\n'"$SNS_STATUS"'"
+                  }
+                }
+              ]
+            }'
+
+      # ===== ❌ Slack 通知ステップ(失敗時) =====
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          ACTOR="${GITHUB_ACTOR}"
+          
+          if [ "$BRANCH_NAME" = "main" ]; then
+            WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL_PROD }}"
+            ENV_NAME="Production"
+          else
+            WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL_STAGING }}"
+            ENV_NAME="Staging"
+          fi
+
+          curl -X POST "$WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "text": "❌ '"$ENV_NAME"' デプロイ失敗",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "❌ '"$ENV_NAME"' デプロイ失敗"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*ブランチ:*\n'"$BRANCH_NAME"'"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*コミット:*\n`'"$COMMIT_SHA"'`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*実行者:*\n@'"$ACTOR"'"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*ログ:*\n<'"$GITHUB_SERVER_URL"'/'"$GITHUB_REPOSITORY"'/actions/runs/'"$GITHUB_RUN_ID"'|GitHub Actions ログを確認>"
+                    }
+                  ]
+                }
+              ]
+            }'
