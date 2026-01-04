@@ -136,28 +136,23 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*ブランチ:*
-'"$BRANCH_NAME"'"
+                      "text": "*ブランチ:*'"$BRANCH_NAME"'"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*トリガー:*
-'"$TRIGGER_TYPE"'"
+                      "text": "*トリガー:*'"$TRIGGER_TYPE"'"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*コミット:*
-`'"$COMMIT_SHA"'`"
+                      "text": "*コミット:*`'"$COMMIT_SHA"'`"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*実行者:*
-@'"$ACTOR"'"
+                      "text": "*実行者:*@'"$ACTOR"'"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*サイト URL:*
-<'"$SITE_URL"'|'"$SITE_URL"'>"
+                      "text": "*サイト URL:*<'"$SITE_URL"'|'"$SITE_URL"'>"
                     }
                   ]
                 },
@@ -165,8 +160,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*コミットメッセージ:*
-'"$COMMIT_MSG"''"$SNS_STATUS"'"
+                    "text": "*コミットメッセージ:*'"$COMMIT_MSG"''"$SNS_STATUS"'"
                   }
                 }
               ]
@@ -222,28 +216,23 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*ブランチ:*
-'"$BRANCH_NAME"'"
+                      "text": "*ブランチ:*'"$BRANCH_NAME"'"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*トリガー:*
-'"$TRIGGER_TYPE"'"
+                      "text": "*トリガー:*'"$TRIGGER_TYPE"'"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*コミット:*
-`'"$COMMIT_SHA"'`"
+                      "text": "*コミット:*`'"$COMMIT_SHA"'`"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*実行者:*
-@'"$ACTOR"'"
+                      "text": "*実行者:*@'"$ACTOR"'"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*ログ:*
-<'"$GITHUB_SERVER_URL"'/'"$GITHUB_REPOSITORY"'/actions/runs/'"$GITHUB_RUN_ID"'|GitHub Actions ログを確認>"
+                      "text": "*ログ:*<'"$GITHUB_SERVER_URL"'/'"$GITHUB_REPOSITORY"'/actions/runs/'"$GITHUB_RUN_ID"'|GitHub Actions ログを確認>"
                     }
                   ]
                 }
