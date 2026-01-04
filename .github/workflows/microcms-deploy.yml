@@ -6,10 +6,20 @@ on:
   schedule:
     - cron: "0 15 * * *"
   workflow_dispatch:
+  push:                      # ← v3で追加
+    branches:
+      - main
+      - staging
+
+# ✅ Git push権限（項番4で設定済み）
+permissions:
+  contents: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # [skip ci] が含まれていたらスキップ（無限ループ防止）
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
       TZ: 'Asia/Tokyo'
     
@@ -42,19 +52,13 @@ jobs:
           git diff --staged --quiet || git commit -m "chore: update content from microCMS [skip ci]"
           git push
 
-      - name: Build Astro site
-        run: npm run build
-        env:
-          MODE: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: my-astro-site
-          directory: dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      # ===== v3: Cloudflare Pages へのデプロイは Git 連携で自動実行 =====
+      # Build は不要（Cloudflare Pages 側で自動ビルド）
+      # ただし、ローカルでビルドを確認したい場合は以下を有効化:
+      # - name: Build Astro site (Optional)
+      #   run: npm run build
+      #   env:
+      #     MODE: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
 
       # ===== SNS投稿 =====
       - name: Post to Social Media
@@ -92,10 +96,28 @@ jobs:
             SITE_URL="https://staging.example.com"
           fi
 
+          # v3: トリガータイプを判定
+          TRIGGER_TYPE=""
+          case "${{ github.event_name }}" in
+            "push")
+              TRIGGER_TYPE="🔧 Code Push"
+              ;;
+            "repository_dispatch")
+              TRIGGER_TYPE="📝 microCMS Webhook"
+              ;;
+            "schedule")
+              TRIGGER_TYPE="⏰ Scheduled Sync"
+              ;;
+            "workflow_dispatch")
+              TRIGGER_TYPE="👤 Manual Execution"
+              ;;
+          esac
+
           # SNS投稿結果を取得
           SNS_STATUS=""
           if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            SNS_STATUS="*SNS投稿:* Tumblr ✅ / Bluesky ✅"
+            SNS_STATUS="
+*SNS投稿:* Tumblr ✅ / Bluesky ✅"
           fi
 
           curl -X POST "$WEBHOOK_URL" \
@@ -115,19 +137,28 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*ブランチ:*\n'"$BRANCH_NAME"'"
+                      "text": "*ブランチ:*
+'"$BRANCH_NAME"'"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*コミット:*\n`'"$COMMIT_SHA"'`"
+                      "text": "*トリガー:*
+'"$TRIGGER_TYPE"'"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*実行者:*\n@'"$ACTOR"'"
+                      "text": "*コミット:*
+`'"$COMMIT_SHA"'`"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*サイト URL:*\n<'"$SITE_URL"'|'"$SITE_URL"'>"
+                      "text": "*実行者:*
+@'"$ACTOR"'"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*サイト URL:*
+<'"$SITE_URL"'|'"$SITE_URL"'>"
                     }
                   ]
                 },
@@ -135,7 +166,8 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*コミットメッセージ:*\n'"$COMMIT_MSG"'\n\n'"$SNS_STATUS"'"
+                    "text": "*コミットメッセージ:*
+'"$COMMIT_MSG"''"$SNS_STATUS"'"
                   }
                 }
               ]
@@ -157,6 +189,23 @@ jobs:
             ENV_NAME="Staging"
           fi
 
+          # v3: トリガータイプを判定
+          TRIGGER_TYPE=""
+          case "${{ github.event_name }}" in
+            "push")
+              TRIGGER_TYPE="🔧 Code Push"
+              ;;
+            "repository_dispatch")
+              TRIGGER_TYPE="📝 microCMS Webhook"
+              ;;
+            "schedule")
+              TRIGGER_TYPE="⏰ Scheduled Sync"
+              ;;
+            "workflow_dispatch")
+              TRIGGER_TYPE="👤 Manual Execution"
+              ;;
+          esac
+
           curl -X POST "$WEBHOOK_URL" \
             -H 'Content-Type: application/json' \
             -d '{
@@ -174,21 +223,31 @@ jobs:
                   "fields": [
                     {
                       "type": "mrkdwn",
-                      "text": "*ブランチ:*\n'"$BRANCH_NAME"'"
+                      "text": "*ブランチ:*
+'"$BRANCH_NAME"'"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*コミット:*\n`'"$COMMIT_SHA"'`"
+                      "text": "*トリガー:*
+'"$TRIGGER_TYPE"'"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*実行者:*\n@'"$ACTOR"'"
+                      "text": "*コミット:*
+`'"$COMMIT_SHA"'`"
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*ログ:*\n<'"$GITHUB_SERVER_URL"'/'"$GITHUB_REPOSITORY"'/actions/runs/'"$GITHUB_RUN_ID"'|GitHub Actions ログを確認>"
+                      "text": "*実行者:*
+@'"$ACTOR"'"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*ログ:*
+<'"$GITHUB_SERVER_URL"'/'"$GITHUB_REPOSITORY"'/actions/runs/'"$GITHUB_RUN_ID"'|GitHub Actions ログを確認>"
                     }
                   ]
                 }
               ]
             }'
+
