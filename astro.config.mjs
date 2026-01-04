@@ -6,8 +6,8 @@ import tailwindcss from '@tailwindcss/vite';
 // https://astro.build/config
 export default defineConfig({
   output: 'static',
-  
-  SYNTAX_ERROR_HERE // ← 意図的なエラー
+
+brabrabra*!
 
   vite: {
     plugins: [tailwindcss()]
