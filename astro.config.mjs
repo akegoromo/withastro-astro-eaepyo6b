@@ -7,6 +7,8 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   output: 'static',
   
+  SYNTAX_ERROR_HERE // ← 意図的なエラー
+
   vite: {
     plugins: [tailwindcss()]
   }
