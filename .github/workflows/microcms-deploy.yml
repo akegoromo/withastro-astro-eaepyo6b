@@ -116,8 +116,7 @@ jobs:
           # SNS投稿結果を取得
           SNS_STATUS=""
           if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            SNS_STATUS="
-*SNS投稿:* Tumblr ✅ / Bluesky ✅"
+            SNS_STATUS="*SNS投稿:* Tumblr ✅ / Bluesky ✅"
           fi
 
           curl -X POST "$WEBHOOK_URL" \
@@ -250,4 +249,3 @@ jobs:
                 }
               ]
             }'
-
