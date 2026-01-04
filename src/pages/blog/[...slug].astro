@@ -15,7 +15,7 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content } = await post.render();
 ---
-
+SYNTAX_ERROR_HERE // ← 意図的なエラー
 <Layout title={post.data.title}>
   <article style="padding: 2rem; max-width: 800px; margin: 0 auto;">
     <header style="margin-bottom: 2rem; border-bottom: 2px solid #eee; padding-bottom: 1rem;">

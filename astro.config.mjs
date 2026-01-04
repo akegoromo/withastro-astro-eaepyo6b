@@ -7,8 +7,6 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   output: 'static',
 
-brabrabra*!
-
   vite: {
     plugins: [tailwindcss()]
   }
