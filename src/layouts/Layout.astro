@@ -5,11 +5,15 @@ import SEO from '../components/SEO.astro';
 export interface Props {
   title: string;
   description?: string;
+  image?: string;      // ✅ 追加
+  article?: boolean;   // ✅ 追加
 }
 
 const {
   title,
   description = 'Astro + Cloudflare Pages で構築するJAMstackサイト',
+  image,
+  article
 } = Astro.props;
 ---
 <!doctype html>
@@ -18,8 +22,7 @@ const {
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<SEO title={title} description={description} />
+		<SEO title={title} description={description} image={image} article={article} />
 		<title>Astro Basics</title>
 	</head>
 	<body>

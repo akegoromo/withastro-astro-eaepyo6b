@@ -2,21 +2,32 @@
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 
-// 静的サイト生成用のパス一覧を返す
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
-  
   return posts.map((post) => ({
     params: { slug: post.slug },
     props: { post },
   }));
 }
 
+// Astro.propsから記事データを取得
 const { post } = Astro.props;
 const { Content } = await post.render();
+
+// SEO用メタデータの準備
+const title = post.data.title;
+const description = post.data.description || post.data.excerpt || 'microCMSで作成した記事です';
+const image = post.data.eyecatch?.url || post.data.image || undefined;
+const isArticle = true;
 ---
-SYNTAX_ERROR_HERE // ← 意図的なエラー
-<Layout title={post.data.title}>
+
+<!-- ✅ 全てのプロパティを渡す -->
+<Layout 
+  title={title}
+  description={description}
+  image={image}
+  article={isArticle}
+>
   <article style="padding: 2rem; max-width: 800px; margin: 0 auto;">
     <header style="margin-bottom: 2rem; border-bottom: 2px solid #eee; padding-bottom: 1rem;">
       <h1 style="margin: 0 0 0.5rem 0;">{post.data.title}</h1>
