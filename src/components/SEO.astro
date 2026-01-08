@@ -1,0 +1,42 @@
+---
+// src/components/SEO.astro - 修正版
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  article?: boolean;
+}
+
+const { title, description, image, article = false } = Astro.props;
+
+// ✅ 修正: 3段階フォールバック
+const siteUrl = Astro.site?.toString() 
+  || import.meta.env.SITE 
+  || 'https://your-site.pages.dev';
+
+// ✅ 安全なURL生成
+const canonicalURL = new URL(Astro.url.pathname, siteUrl).toString();
+
+// OG画像
+const ogImage = image || `${siteUrl}/og-default.jpg`;
+---
+
+<!-- Primary Meta Tags -->
+<title>{title}</title>
+<meta name="title" content={title} />
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content={article ? "article" : "website"} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={ogImage} />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content={canonicalURL} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
