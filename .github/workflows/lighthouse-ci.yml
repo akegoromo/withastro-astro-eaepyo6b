@@ -1,16 +1,19 @@
 name: Lighthouse CI
 
 on:
-  pull_request:
-    branches: [main]
   push:
-    branches: [main]
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   lighthouse:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -22,34 +25,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Astro site
+      - name: Build site
         run: npm run build
         env:
-          MICROCMS_API_KEY: ${{ secrets.MICROCMS_API_KEY }}
-          MICROCMS_SERVICE_DOMAIN: ${{ secrets.MICROCMS_SERVICE_DOMAIN }}
+          MODE: production
 
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            http://localhost:3000
-            http://localhost:3000/blog
-            http://localhost:3000/about
-          temporaryPublicStorage: true
+            https://your-site.pages.dev
           uploadArtifacts: true
-          configPath: './lighthouserc.js'
+          temporaryPublicStorage: true
 
-      - name: Post Lighthouse results to PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v3
+        if: always()
         with:
-          script: |
-            const fs = require('fs');
-            const results = JSON.parse(fs.readFileSync('.lighthouseci/manifest.json', 'utf8'));
-            const comment = `## 🚨 Lighthouse CI Results\n\n${results.summary}`;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
+          name: lighthouse-results
+          path: .lighthouseci/
