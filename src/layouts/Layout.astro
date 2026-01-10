@@ -21,7 +21,14 @@ const {
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  		<!-- ✨ Favicon の追加（OGP 設定の前） -->
+  		<link rel="icon" href="/favicon.ico" sizes="32x32" />
+  		<link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png" />
+  		<link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
+  		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  		<link rel="manifest" href="/manifest.webmanifest" />
+
 		<SEO title={title} description={description} image={image} article={article} />
 		<title>Astro Basics</title>
 	</head>
