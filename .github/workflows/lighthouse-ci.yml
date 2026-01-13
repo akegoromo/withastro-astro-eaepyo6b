@@ -34,7 +34,7 @@ jobs:
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            https://your-site.pages.dev
+            https://withastro-astro-eaepyo6b.pages.dev
           uploadArtifacts: true
           temporaryPublicStorage: true
 
