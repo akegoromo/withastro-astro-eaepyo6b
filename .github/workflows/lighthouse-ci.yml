@@ -38,9 +38,22 @@ jobs:
           uploadArtifacts: true
           temporaryPublicStorage: true
 
-      - name: Upload Lighthouse results
-        uses: actions/upload-artifact@v4
+      # Upload の直前に追加
+      - name: Debug - List Lighthouse CI output
         if: always()
+        run: |
+          echo "=== Checking .lighthouseci directory ==="
+          ls -laR .lighthouseci/ || echo "⚠️  .lighthouseci does not exist"
+
+      - name: Upload Lighthouse results
+        if: always()
+        uses: actions/upload-artifact@v4  # ✅ v3 → v4
         with:
-          name: lighthouse-results
-          path: .lighthouseci/
+          name: lighthouse-results-${{ github.run_id }}  # ✅ ユニーク名
+          path: |
+            .lighthouseci
+            lhci-report.html
+          include-hidden-files: true  # ✅ 隠しファイルを含める
+          if-no-files-found: warn     # ✅ エラー終了を回避
+          retention-days: 30
+          compression-level: 6
