@@ -1,10 +1,9 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import partytown from '@astrojs/partytown';
 import tailwindcss from '@tailwindcss/vite';
 import sitemapConfig from './config/sitemap.config.js';
-
-import partytown from '@astrojs/partytown';
 
 // ===========================
 // Cloudflare 環境変数から
@@ -39,18 +38,26 @@ console.log(`✅ カスタムページ合計: ${allCustomPages.length} 件`);
 export default defineConfig({
   site: siteUrl,
   
-  integrations: [sitemap({
-    // ✅ siteUrl を使用して動的に生成
-    customPages: allCustomPages,
-    
-    // ✅ siteUrl を渡してフィルター生成
-    filter: sitemapConfig.createSitemapFilter(siteUrl),
-    
-    // オプション設定
-    changefreq: 'weekly',
-    priority: 0.7,
-    lastmod: new Date(),
-  }), partytown()],
+  integrations: [
+    sitemap({
+      // ✅ siteUrl を使用して動的に生成
+      customPages: allCustomPages,
+      
+      // ✅ siteUrl を渡してフィルター生成
+      filter: sitemapConfig.createSitemapFilter(siteUrl),
+      
+      // オプション設定
+      changefreq: 'weekly',
+      priority: 0.7,
+      lastmod: new Date(),
+    }),
+    partytown({  // ← GA4 統合のための Partytown 設定
+      config: {
+        debug: process.env.NODE_ENV === 'development',  // 開発時のみデバッグモード
+        forward: ['dataLayer.push'],  // GA4 の dataLayer をメインスレッドに転送
+      },
+    }),
+  ],
   output: 'static',
 
   build: {
