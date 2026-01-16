@@ -4,6 +4,8 @@ import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import sitemapConfig from './config/sitemap.config.js';
 
+import partytown from '@astrojs/partytown';
+
 // ===========================
 // Cloudflare 環境変数から
 // siteUrl を自動検出
@@ -37,20 +39,18 @@ console.log(`✅ カスタムページ合計: ${allCustomPages.length} 件`);
 export default defineConfig({
   site: siteUrl,
   
-  integrations: [
-    sitemap({
-      // ✅ siteUrl を使用して動的に生成
-      customPages: allCustomPages,
-      
-      // ✅ siteUrl を渡してフィルター生成
-      filter: sitemapConfig.createSitemapFilter(siteUrl),
-      
-      // オプション設定
-      changefreq: 'weekly',
-      priority: 0.7,
-      lastmod: new Date(),
-    }),
-  ],
+  integrations: [sitemap({
+    // ✅ siteUrl を使用して動的に生成
+    customPages: allCustomPages,
+    
+    // ✅ siteUrl を渡してフィルター生成
+    filter: sitemapConfig.createSitemapFilter(siteUrl),
+    
+    // オプション設定
+    changefreq: 'weekly',
+    priority: 0.7,
+    lastmod: new Date(),
+  }), partytown()],
   output: 'static',
 
   build: {
