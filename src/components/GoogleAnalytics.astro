@@ -1,0 +1,20 @@
+---
+// src/components/GoogleAnalytics.astro
+const GA_MEASUREMENT_ID = import.meta.env.GA4_MEASUREMENT_ID;
+---
+
+{GA_MEASUREMENT_ID && (
+  <>
+    <!-- Google tag (gtag.js) with Partytown -->
+    <script
+      type="text/partytown"
+      src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+    ></script>
+    <script type="text/partytown">
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{GA_MEASUREMENT_ID}');
+    </script>
+  </>
+)}
