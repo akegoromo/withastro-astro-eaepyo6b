@@ -1,20 +1,47 @@
 ---
-// src/components/GoogleAnalytics.astro
-const GA_MEASUREMENT_ID = import.meta.env.GA4_MEASUREMENT_ID;
+// src/components/GoogleAnalytics.astro - 修正版
+const measurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
+const isProduction = import.meta.env.PROD;
+
+// pages.devドメインでの計測を有効化（環境構築段階）
+const site = Astro.site?.toString() || import.meta.env.SITE || '';
+const isPagesDevDomain = site.includes('.pages.dev');
+
+// 現段階：pages.devでのみ計測（カスタムドメイン移行後に条件変更）
+const shouldTrack = isProduction && isPagesDevDomain && measurementId;
+// // pages.devから本番ドメインに切り替え
+// const shouldTrack = isProduction && !isPagesDevDomain && measurementId;
+
+// デバッグ情報（開発時のみ表示）
+if (!isProduction) {
+  console.log('🔍 GA4 Debug Info:');
+  console.log('  Measurement ID:', measurementId);
+  console.log('  Is Production:', isProduction);
+  console.log('  Is Pages.dev:', isPagesDevDomain);
+  console.log('  Should Track:', shouldTrack);
+}
 ---
 
-{GA_MEASUREMENT_ID && (
+{shouldTrack && (
   <>
     <!-- Google tag (gtag.js) with Partytown -->
     <script
       type="text/partytown"
-      src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+      src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
     ></script>
-    <script type="text/partytown">
+    
+    <!-- ✅ define:vars で変数を正しく展開 -->
+    <script type="text/partytown" define:vars={{ measurementId }}>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', '{GA_MEASUREMENT_ID}');
+      
+      // ✅ 変数として正しく渡される
+      gtag('config', measurementId, {
+        send_page_view: true,
+        anonymize_ip: true,
+        debug_mode: false
+      });
     </script>
   </>
 )}

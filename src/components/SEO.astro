@@ -9,16 +9,19 @@ interface Props {
 
 const { title, description, image, article = false } = Astro.props;
 
-// ✅ 修正: 3段階フォールバック
+// 3段階フォールバック : Cloudflare Pages環境に最適化されたサイトURL取得
 const siteUrl = Astro.site?.toString() 
   || import.meta.env.SITE 
-  || 'https://your-site.pages.dev';
+  || import.meta.env.CF_PAGES_URL  // Cloudflare Pages自動設定
+  || 'https://withastro-astro-eaepyo6b.pages.dev'; // 実際のプロジェクト名に変更
 
 // ✅ 安全なURL生成
 const canonicalURL = new URL(Astro.url.pathname, siteUrl).toString();
 
 // OG画像
-const ogImage = image || `${siteUrl}/og-default.jpg`;
+const ogImage = image
+  ? new URL(image, siteUrl).toString()
+  : `${siteUrl}/images/ogp/og-default.png`;
 ---
 
 <!-- Primary Meta Tags -->
@@ -33,6 +36,7 @@ const ogImage = image || `${siteUrl}/og-default.jpg`;
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
 <meta property="og:image" content={ogImage} />
+<meta property="og:site_name" content="緋衣堂" />
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
@@ -40,3 +44,6 @@ const ogImage = image || `${siteUrl}/og-default.jpg`;
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={ogImage} />
+
+<!-- 言語設定 -->
+<meta property="og:locale" content="ja_JP" />
