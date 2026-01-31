@@ -1,0 +1,49 @@
+name: Auto Translate Post (Sakura AI + DeepL)
+
+on:
+  repository_dispatch:
+    types: [microcms-webhook]
+  workflow_dispatch:
+    inputs:
+      content_id:
+        description: 'microCMS Content ID to translate'
+        required: true
+        type: string
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install axios
+
+      - name: Generate summary with Sakura AI and translate
+        env:
+          MICROCMS_API_KEY: ${{ secrets.MICROCMS_API_KEY }}
+          MICROCMS_SERVICE_DOMAIN: ${{ secrets.MICROCMS_SERVICE_DOMAIN }}
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
+          SAKURA_AI_TOKEN: ${{ secrets.SAKURA_AI_TOKEN }}
+          POST_ID: ${{ github.event.client_payload.id || github.event.inputs.content_id }}
+        run: node scripts/generate-summary-and-translate.js
+
+      - name: Notify success
+        if: success()
+        run: |
+          echo "✅ Translation completed successfully"
+          echo "📝 Content ID: ${{ github.event.client_payload.id || github.event.inputs.content_id }}"
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "❌ Translation failed"
+          echo "📝 Content ID: ${{ github.event.client_payload.id || github.event.inputs.content_id }}"
+          exit 1
