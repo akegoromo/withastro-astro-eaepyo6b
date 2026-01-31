@@ -37,7 +37,15 @@ console.log(`✅ カスタムページ合計: ${allCustomPages.length} 件`);
 // ===========================
 export default defineConfig({
   site: siteUrl,
-  
+
+  i18n: {
+    defaultLocale: 'ja',
+    locales: ['ja', 'en'],
+    routing: {
+      prefixDefaultLocale: false,
+    },
+  },
+
   integrations: [
     sitemap({
       // ✅ siteUrl を使用して動的に生成

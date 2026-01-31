@@ -1,0 +1,41 @@
+---
+// src/components/LanguageSwitcher.astro
+const currentPath = Astro.url.pathname;
+const currentLocale = Astro.currentLocale || 'ja';
+
+const getAlternateUrl = () => {
+  if (currentLocale === 'ja') {
+    return `/en${currentPath}`;
+  } else {
+    return currentPath.replace(/^\/en/, '');
+  }
+};
+
+const alternateLocale = currentLocale === 'ja' ? 'en' : 'ja';
+const alternateLabel = currentLocale === 'ja' ? 'English' : '日本語';
+---
+
+<div class="language-switcher">
+  <a href={getAlternateUrl()}>
+    {alternateLabel}
+  </a>
+</div>
+
+<style>
+  .language-switcher {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    border-radius: 0.375rem;
+  }
+  
+  .language-switcher a {
+    text-decoration: none;
+    color: #1f2937;
+    font-weight: 500;
+  }
+  
+  .language-switcher a:hover {
+    color: #3b82f6;
+  }
+</style>
