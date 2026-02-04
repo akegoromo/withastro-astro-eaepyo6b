@@ -1,0 +1,195 @@
+---
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+  minDepth?: number;
+  maxDepth?: number;
+  lang?: string;
+}
+
+const { headings, minDepth = 2, maxDepth = 3, lang = 'en' } = Astro.props;
+
+// 指定レベルの見出しのみフィルタリング
+const filteredHeadings = headings.filter(
+  (heading) => heading.depth >= minDepth && heading.depth <= maxDepth
+);
+
+// i18n対応ラベル
+const tocLabels: Record<string, string> = {
+  en: 'Table of Contents',
+  ja: '目次',
+  es: 'Tabla de Contenidos',
+  fr: 'Table des Matières',
+  de: 'Inhaltsverzeichnis',
+  zh: '目录',
+  ko: '목차',
+};
+
+const tocTitle = tocLabels[lang] || tocLabels.ja;
+
+// CSS変数用にIDをサニタイズ
+const safeId = (id: string) => id.replace(/[^a-zA-Z0-9-_]/g, '-');
+---
+
+{filteredHeadings.length > 0 && (
+  <nav 
+    class="toc-container bg-gray-50 dark:bg-gray-800/90 rounded-lg p-4 mb-6 border-l-4 border-blue-500" 
+    aria-label={tocTitle}
+  >
+    <h2 class="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
+      {tocTitle}
+    </h2>
+    <ul class="toc-list space-y-1">
+      {filteredHeadings.map((heading) => {
+        const timelineName = `--heading-${safeId(heading.slug)}`;
+        return (
+          <li 
+            class="toc-item"
+            style={`margin-left: ${(heading.depth - minDepth) * 1.25}rem; --target-timeline: ${timelineName};`}
+          >
+            <a 
+              href={`#${heading.slug}`}
+              class="toc-link block py-1.5 px-2 text-sm text-gray-600 dark:text-gray-400 rounded transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              data-target={heading.slug}
+            >
+              {heading.text}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </nav>
+)}
+
+<style>
+  /* 基本スタイル */
+  .toc-container {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+
+  .toc-link {
+    transform-origin: left center;
+    text-decoration: none;
+    will-change: transform, font-size, color;
+    backface-visibility: hidden;
+  }
+
+  /* キーボードナビゲーション対応 */
+  .toc-link:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  /* CSS Scroll-driven Animations対応ブラウザ向け */
+  @supports (animation-timeline: view()) {
+    @keyframes toc-highlight {
+      0%, 100% {
+        font-size: 0.875rem;
+        font-weight: 400;
+        color: rgb(75 85 99 / 1); /* gray-600 */
+        transform: scale(1);
+      }
+      50% {
+        font-size: 0.9375rem; /* 約7%拡大 */
+        font-weight: 500;
+        color: rgb(31 41 55 / 1); /* gray-800 */
+        transform: scale(1.05);
+      }
+    }
+
+    @keyframes toc-highlight-dark {
+      0%, 100% {
+        font-size: 0.875rem;
+        font-weight: 400;
+        color: rgb(156 163 175 / 1); /* gray-400 */
+        transform: scale(1);
+      }
+      50% {
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: rgb(229 231 235 / 1); /* gray-200 */
+        transform: scale(1.05);
+      }
+    }
+
+    .toc-link {
+      animation-name: toc-highlight;
+      animation-timeline: var(--target-timeline);
+      animation-range: contain 0% contain 40%;
+      animation-fill-mode: both;
+    }
+
+    :global(.dark) .toc-link {
+      animation-name: toc-highlight-dark;
+    }
+  }
+
+  /* フォールバック: Scroll-driven Animations未対応ブラウザ向け */
+  @supports not (animation-timeline: view()) {
+    .toc-link.active {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: rgb(31 41 55 / 1);
+      transform: scale(1.05);
+      background-color: rgb(243 244 246 / 1);
+    }
+
+    :global(.dark) .toc-link.active {
+      color: rgb(229 231 235 / 1);
+      background-color: rgb(55 65 81 / 1);
+    }
+  }
+
+  /* モバイル対応 */
+  @media (max-width: 1024px) {
+    .toc-container {
+      position: relative;
+      max-height: none;
+      top: 0;
+    }
+  }
+</style>
+
+<script>
+  // Scroll-driven Animations未対応ブラウザ用フォールバック
+  if (!CSS.supports('animation-timeline: view()')) {
+    const observerOptions = {
+      rootMargin: '-20% 0% -80% 0%',
+      threshold: [0, 0.25, 0.5, 0.75, 1]
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const id = entry.target.getAttribute('id');
+        if (!id) return;
+        
+        const tocLink = document.querySelector(`.toc-link[data-target="${id}"]`);
+        
+        if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+          // 既存のアクティブ状態をクリア
+          document.querySelectorAll('.toc-link.active').forEach(link => 
+            link.classList.remove('active')
+          );
+          // 現在の見出しをアクティブに
+          tocLink?.classList.add('active');
+        }
+      });
+    }, observerOptions);
+
+    // DOMContentLoaded後に見出しを監視開始
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('h2[id], h3[id], h4[id]').forEach(heading => {
+        observer.observe(heading);
+      });
+    });
+
+    // Astroページ遷移時のクリーンアップ
+    document.addEventListener('astro:before-preparation', () => {
+      observer.disconnect();
+    });
+  }
+</script>

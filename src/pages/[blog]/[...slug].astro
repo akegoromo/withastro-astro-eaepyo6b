@@ -1,0 +1,162 @@
+---
+// ===========================
+// インポート
+// ===========================
+import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+// import Layout from "@layouts/Layout.astro";
+// import TableOfContents from "@components/TableOfContents.astro";
+import Layout from "../../layouts/Layout.astro";
+import TableOfContents from "../../components/TableOfContents.astro";
+
+// ===========================
+// 多言語対応の getStaticPaths
+// ===========================
+export const getStaticPaths = (async () => {
+  const posts = await getCollection("blog", (entry) => !entry.data.isDraft);
+
+  // 言語設定
+  const langConfigs = {
+    ja: { prefix: "ja/", blogPath: "/blog" },           // /blog/first-post/
+    en: { prefix: "en/", blogPath: "/en/blog" },        // /en/blog/first-post/
+  };
+
+  const createPath = (post, lang, blogPath) => {
+    return {
+      params: { 
+        blog: blogPath,                    // [blog] パラメータ
+        slug: post.id.split("/")[1]        // [...slug] パラメータ
+      },
+      props: { post, lang },
+    };
+  };
+
+  // 全言語の全記事パスを生成
+  return Object.entries(langConfigs).flatMap(([lang, { prefix, blogPath }]) =>
+    posts
+      .filter((post) => post.id.startsWith(prefix))
+      .map((post) => createPath(post, lang, blogPath))
+  );
+}) satisfies GetStaticPaths;
+
+// ===========================
+// Props
+// ===========================
+const { post, lang } = Astro.props;
+
+// ===========================
+// Content と headings を取得
+// ===========================
+const { Content, headings } = await post.render();
+
+// ===========================
+// timeline-scope 用のタイムライン名を収集
+// ===========================
+const safeId = (id: string) => id.replace(/[^a-zA-Z0-9-_]/g, '-');
+const filteredHeadings = headings.filter(h => h.depth >= 2 && h.depth <= 3);
+const timelineScope = filteredHeadings
+  .map(h => `--heading-${safeId(h.slug)}`)
+  .join(' ');
+
+// ===========================
+// SEO用メタデータ
+// ===========================
+const title = post.data.title;
+const description = post.data.description || 'ブログ記事';
+const image = post.data.eyecatch?.url || post.data.image || undefined;
+---
+
+<Layout 
+  title={title}
+  description={description}
+  image={image}
+  article={true}
+>
+  <!-- ===========================
+       timeline-scope を共通親要素に設定
+       =========================== -->
+  <div class="page-wrapper" style={`timeline-scope: ${timelineScope};`}>
+    <section role="main" aria-labelledby="article-title" class="max-w-7xl mx-auto px-4 py-8">
+      <article>
+        <!-- 記事画像（存在すれば） -->
+        {(post?.data?.eyecatch?.url || post?.data?.image) && (
+          <img 
+            src={post.data.eyecatch?.url || post.data.image} 
+            alt={post?.data?.title}
+            class="mb-10 w-full rounded-lg"
+            loading="eager"
+          />
+        )}
+
+        <!-- 記事タイトル -->
+        <h1 id="article-title" class="text-4xl font-bold mb-4">
+          {post?.data?.title}
+        </h1>
+
+        <!-- 記事メタ情報 -->
+        <div id="article-meta" class="mb-8">
+          {post?.data?.description && (
+            <p class="text-xl text-gray-600 dark:text-gray-400 mb-4">
+              {post.data.description}
+            </p>
+          )}
+          <time 
+            datetime={post.data.pubDate.toISOString()}
+            class="text-sm text-gray-500"
+          >
+            {post.data.pubDate.toLocaleDateString(lang === 'ja' ? 'ja-JP' : 'en-US')}
+          </time>
+          
+          {post.data.tags && post.data.tags.length > 0 && (
+            <div class="tags mt-2">
+              {post.data.tags.map((tag) => (
+                <span class="inline-block bg-gray-200 dark:bg-gray-700 px-2 py-1 mr-2 rounded text-sm">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <!-- ===========================
+             2カラムレイアウト（本文 + ToC）
+             =========================== -->
+        <div class="flex flex-col lg:flex-row lg:gap-8">
+          <!-- モバイル用 ToC（記事上部） -->
+          <div class="lg:hidden mb-8">
+            <TableOfContents headings={headings} lang={lang} />
+          </div>
+          
+          <!-- 記事本文 -->
+          <main class="flex-1 min-w-0 max-w-4xl">
+            <section 
+              id="md-content"
+              class="prose prose-lg dark:prose-invert max-w-none
+                     prose-headings:scroll-mt-20
+                     prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4
+                     prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3
+                     prose-a:text-blue-600 dark:prose-a:text-blue-400"
+            >
+              <Content />
+            </section>
+          </main>
+          
+          <!-- デスクトップ用 ToC（サイドバー） -->
+          <aside class="hidden lg:block lg:w-72 flex-shrink-0">
+            <TableOfContents headings={headings} lang={lang} />
+          </aside>
+        </div>
+
+        <!-- フッター -->
+        <footer class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+          <a 
+            href={lang === 'ja' ? '/' : '/en/'} 
+            class="text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            ← {lang === 'ja' ? '記事一覧に戻る' : 'Back to articles'}
+          </a>
+        </footer>
+      </article>
+    </section>
+  </div>
+</Layout>

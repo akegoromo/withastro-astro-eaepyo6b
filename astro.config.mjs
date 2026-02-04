@@ -6,6 +6,30 @@ import tailwindcss from '@tailwindcss/vite';
 import sitemapConfig from './config/sitemap.config.js';
 
 // ===========================
+// ToC 対応: 必要なインポートを追加
+// ===========================
+import rehypeSlug from 'rehype-slug';
+import { visit } from 'unist-util-visit';
+
+// ===========================
+// カスタム Rehype プラグイン
+// 見出しに view-timeline-name を付与
+// ===========================
+function rehypeScrollTimeline() {
+  return (tree) => {
+    visit(tree, 'element', (node) => {
+      if (['h2', 'h3', 'h4'].includes(node.tagName) && node.properties.id) {
+        // CSS変数として安全な形式にIDを変換
+        const safeId = node.properties.id.replace(/[^a-zA-Z0-9-_]/g, '-');
+        // style属性にview-timeline-nameを追加
+        const existingStyle = node.properties.style || '';
+        node.properties.style = `${existingStyle}view-timeline-name: --heading-${safeId}; view-timeline-axis: block;`;
+      }
+    });
+  };
+}
+
+// ===========================
 // Cloudflare 環境変数から
 // siteUrl を自動検出
 // ===========================
@@ -38,7 +62,10 @@ console.log(`✅ カスタムページ合計: ${allCustomPages.length} 件`);
 export default defineConfig({
   site: siteUrl,
 
-  i18n: {
+  // ===========================
+  // i18n 設定
+  // ===========================
+    i18n: {
     defaultLocale: 'ja',
     locales: ['ja', 'en'],
     routing: {
@@ -79,5 +106,16 @@ export default defineConfig({
   
   vite: {
     plugins: [tailwindcss()]
-  }
+  },
+
+    // ===========================
+  // ToC 対応: Markdown 設定を追加
+  // ===========================
+  markdown: {
+    rehypePlugins: [
+      rehypeSlug,            // 見出しID生成（必須）
+      rehypeScrollTimeline,  // タイムライン名付与（追加）
+    ],
+  },
+  
 });
