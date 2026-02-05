@@ -46,7 +46,7 @@ async function fetchMicroCMSContent() {
     console.log(`✅ Fetched ${data.contents.length} posts from microCMS`);
 
     // 出力ディレクトリの確認・作成
-    const outputDir = path.join(__dirname, '../src/content/blog');
+    const outputDir = path.join(__dirname, '../src/content/blog/ja');
     await fs.mkdir(outputDir, { recursive: true });
 
     // 各記事をMarkdownファイルとして保存
