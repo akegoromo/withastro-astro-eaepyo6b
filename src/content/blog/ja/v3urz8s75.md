@@ -3,6 +3,7 @@ title: "ToC機能の確認用"
 description: "ToC機能試験"
 pubDate: "2026-02-05T02:26:33.619Z"
 updatedDate: "2026-02-05T02:26:33.619Z"
+lang: ja
 tags: ["Tech", "Desgn"]
 ---
 

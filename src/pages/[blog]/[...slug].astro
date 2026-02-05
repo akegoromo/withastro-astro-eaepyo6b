@@ -17,8 +17,8 @@ export const getStaticPaths = (async () => {
 
   // 言語設定
   const langConfigs = {
-    ja: { prefix: "ja/", blogPath: "/blog" },           // /blog/first-post/
-    en: { prefix: "en/", blogPath: "/en/blog" },        // /en/blog/first-post/
+    ja: { prefix: "ja/", blogPath: "/blog" },           // /blog/any-post/
+    en: { prefix: "en/", blogPath: "/en/blog" },        // /en/blog/any-post/
   };
 
   const createPath = (post, lang, blogPath) => {

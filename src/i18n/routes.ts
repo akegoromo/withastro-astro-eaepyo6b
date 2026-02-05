@@ -5,11 +5,11 @@
 export const routes = {
     // 日本語（デフォルト言語）
     ja: {
-      blog: "blog",         // /blog/first-post/
+      blog: "blog",         // /blog/any-post/
     },
     // 英語
     en: {
-      blog: "blog",         // /en/blog/first-post/
+      blog: "blog",         // /en/blog/any-post/
     },
   };
   
