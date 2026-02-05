@@ -21,7 +21,7 @@ const sortedPosts = posts
       <ul style="list-style: none; padding: 0;">
         {sortedPosts.map((post) => (
           <li style="margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
-            <a href={`/blog/${post.slug}/`} style="text-decoration: none; color: inherit;">
+            <a href={`/blog/${post.slug.split("/")[1]}/`} style="text-decoration: none; color: inherit;">
               <h2 style="margin: 0 0 0.5rem 0; color: #0066cc;">
                 {post.data.title}
               </h2>

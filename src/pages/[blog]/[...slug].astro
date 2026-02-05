@@ -4,10 +4,10 @@
 // ===========================
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
-import Layout from "@layouts/Layout.astro";
-import TableOfContents from "@components/TableOfContents.astro";
-// import Layout from "../../layouts/Layout.astro";
-// import TableOfContents from "../../components/TableOfContents.astro";
+//import Layout from "@layouts/Layout.astro";
+//import TableOfContents from "@components/TableOfContents.astro";
+import Layout from "../../layouts/Layout.astro";
+import TableOfContents from "../../components/TableOfContents.astro";
 
 // ===========================
 // 多言語対応の getStaticPaths
@@ -25,7 +25,8 @@ export const getStaticPaths = (async () => {
     return {
       params: { 
         blog: blogPath,                    // [blog] パラメータ
-        slug: post.id.split("/")[1]        // [...slug] パラメータ
+//        slug: post.id.split("/")[1]        // [...slug] パラメータ
+        slug: post.id.split("/")[1].replace(/\.mdx?$/, '')        // [...slug] パラメータ
       },
       props: { post, lang },
     };
