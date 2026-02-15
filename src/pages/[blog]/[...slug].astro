@@ -1,13 +1,17 @@
 ---
 // ===========================
+// src/pages/[blog]/[...slug].astro
+// Phase 3 更新版: Astro i18n Starter デザイン適用
+// ===========================
+
+// ===========================
 // インポート
 // ===========================
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
-//import Layout from "@layouts/Layout.astro";
-//import TableOfContents from "@components/TableOfContents.astro";
-import Layout from "../../layouts/Layout.astro";
-import TableOfContents from "../../components/TableOfContents.astro";
+import Layout from "@/layouts/Layout.astro";
+import TableOfContents from "@/components/TableOfContents.astro";
+import { getLangFromUrl } from "@/i18n/utils";
 
 // ===========================
 // 多言語対応の getStaticPaths
@@ -24,9 +28,8 @@ export const getStaticPaths = (async () => {
   const createPath = (post, lang, blogPath) => {
     return {
       params: { 
-        blog: blogPath,                    // [blog] パラメータ
-//        slug: post.id.split("/")[1]        // [...slug] パラメータ
-        slug: post.id.split("/")[1].replace(/\.mdx?$/, '')        // [...slug] パラメータ
+        blog: blogPath,                                      // [blog] パラメータ
+        slug: post.id.split("/")[1].replace(/\.mdx?$/, '')  // [...slug] パラメータ
       },
       props: { post, lang },
     };
@@ -46,6 +49,11 @@ export const getStaticPaths = (async () => {
 const { post, lang } = Astro.props;
 
 // ===========================
+// 現在の言語を取得
+// ===========================
+const currentLang = getLangFromUrl(Astro.url);
+
+// ===========================
 // Content と headings を取得
 // ===========================
 const { Content, headings } = await post.render();
@@ -60,58 +68,62 @@ const timelineScope = filteredHeadings
   .join(' ');
 
 // ===========================
-// SEO用メタデータ
+// SEO用メタデータ（Phase 1 の新形式に対応）
 // ===========================
 const title = post.data.title;
 const description = post.data.description || 'ブログ記事';
 const image = post.data.eyecatch?.url || post.data.image || undefined;
+
+// meta オブジェクトを作成
+const meta = {
+  description: description,
+  image: image,
+  article: true,
+  type: "article",
+  robots: "index, follow",
+};
 ---
 
-<Layout 
-  title={title}
-  description={description}
-  image={image}
-  article={true}
->
+<Layout title={title} meta={meta}>
   <!-- ===========================
        timeline-scope を共通親要素に設定
        =========================== -->
   <div class="page-wrapper" style={`timeline-scope: ${timelineScope};`}>
-    <section role="main" aria-labelledby="article-title" class="max-w-7xl mx-auto px-4 py-8">
-      <article>
+    <section role="main" aria-labelledby="article-title" class="article-container">
+      <article class="article-content">
         <!-- 記事画像（存在すれば） -->
         {(post?.data?.eyecatch?.url || post?.data?.image) && (
           <img 
             src={post.data.eyecatch?.url || post.data.image} 
             alt={post?.data?.title}
-            class="mb-10 w-full rounded-lg"
+            class="article-eyecatch"
             loading="eager"
           />
         )}
 
         <!-- 記事タイトル -->
-        <h1 id="article-title" class="text-4xl font-bold mb-4">
+        <h1 id="article-title" class="article-title">
           {post?.data?.title}
         </h1>
 
         <!-- 記事メタ情報 -->
-        <div id="article-meta" class="mb-8">
+        <div id="article-meta" class="article-meta">
           {post?.data?.description && (
-            <p class="text-xl text-gray-600 dark:text-gray-400 mb-4">
+            <p class="article-description">
               {post.data.description}
             </p>
           )}
           <time 
             datetime={post.data.pubDate.toISOString()}
-            class="text-sm text-gray-500"
+            class="article-date"
           >
             {post.data.pubDate.toLocaleDateString(lang === 'ja' ? 'ja-JP' : 'en-US')}
           </time>
           
           {post.data.tags && post.data.tags.length > 0 && (
-            <div class="tags mt-2">
+            <div class="article-tags">
               {post.data.tags.map((tag) => (
-                <span class="inline-block bg-gray-200 dark:bg-gray-700 px-2 py-1 mr-2 rounded text-sm">
+                <span class="tag">
                   {tag}
                 </span>
               ))}
@@ -122,37 +134,39 @@ const image = post.data.eyecatch?.url || post.data.image || undefined;
         <!-- ===========================
              2カラムレイアウト（本文 + ToC）
              =========================== -->
-        <div class="flex flex-col lg:flex-row lg:gap-8">
+        <div class="article-layout">
           <!-- モバイル用 ToC（記事上部） -->
-          <div class="lg:hidden mb-8">
+          <div class="toc-mobile">
             <TableOfContents headings={headings} lang={lang} />
           </div>
           
           <!-- 記事本文 -->
-          <main class="flex-1 min-w-0 max-w-4xl">
+          <main class="article-body">
             <section 
               id="md-content"
               class="prose prose-lg dark:prose-invert max-w-none
                      prose-headings:scroll-mt-20
                      prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4
                      prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3
-                     prose-a:text-blue-600 dark:prose-a:text-blue-400"
+                     prose-a:text-blue-600 dark:prose-a:text-blue-400
+                     prose-code:text-pink-600 dark:prose-code:text-pink-400
+                     prose-pre:bg-gray-900 dark:prose-pre:bg-gray-950"
             >
               <Content />
             </section>
           </main>
           
           <!-- デスクトップ用 ToC（サイドバー） -->
-          <aside class="hidden lg:block lg:w-72 flex-shrink-0">
+          <aside class="toc-desktop">
             <TableOfContents headings={headings} lang={lang} />
           </aside>
         </div>
 
-        <!-- フッター -->
-        <footer class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+        <!-- フッター（記事下のナビゲーション） -->
+        <footer class="article-footer">
           <a 
             href={lang === 'ja' ? '/' : '/en/'} 
-            class="text-blue-600 dark:text-blue-400 hover:underline"
+            class="back-link"
           >
             ← {lang === 'ja' ? '記事一覧に戻る' : 'Back to articles'}
           </a>
@@ -161,3 +175,201 @@ const image = post.data.eyecatch?.url || post.data.image || undefined;
     </section>
   </div>
 </Layout>
+
+<style>
+  /* ===========================
+     ページ全体のラッパー
+     =========================== */
+  .page-wrapper {
+    width: 100%;
+  }
+
+  /* ===========================
+     記事コンテナ
+     =========================== */
+  .article-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .article-content {
+    width: 100%;
+  }
+
+  /* ===========================
+     記事画像
+     =========================== */
+  .article-eyecatch {
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+    border-radius: 0.75rem;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  /* ===========================
+     記事タイトル
+     =========================== */
+  .article-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    color: var(--color-text-primary, #111827);
+  }
+
+  /* ===========================
+     記事メタ情報
+     =========================== */
+  .article-meta {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+  }
+
+  .article-description {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: var(--color-text-secondary, #6b7280);
+    margin-bottom: 1rem;
+  }
+
+  .article-date {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--color-text-muted, #9ca3af);
+    margin-bottom: 0.75rem;
+  }
+
+  .article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .tag {
+    display: inline-block;
+    background: var(--color-bg-secondary, #f3f4f6);
+    color: var(--color-text-secondary, #6b7280);
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+
+  .tag:hover {
+    background: var(--color-bg-hover, #e5e7eb);
+  }
+
+  /* ===========================
+     2カラムレイアウト
+     =========================== */
+  .article-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  /* モバイル用 ToC */
+  .toc-mobile {
+    display: block;
+  }
+
+  /* デスクトップ用 ToC */
+  .toc-desktop {
+    display: none;
+  }
+
+  /* 記事本文 */
+  .article-body {
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* ===========================
+     記事フッター
+     =========================== */
+  .article-footer {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border, #e5e7eb);
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--color-primary, #3b82f6);
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+  }
+
+  .back-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+  }
+
+  /* ===========================
+     レスポンシブ（デスクトップ）
+     =========================== */
+  @media (min-width: 1024px) {
+    .article-layout {
+      flex-direction: row;
+      gap: 3rem;
+    }
+
+    /* モバイル ToC を非表示 */
+    .toc-mobile {
+      display: none;
+    }
+
+    /* デスクトップ ToC を表示 */
+    .toc-desktop {
+      display: block;
+      width: 18rem;
+      flex-shrink: 0;
+    }
+
+    /* 記事本文の最大幅 */
+    .article-body {
+      max-width: 56rem;
+    }
+
+    .article-title {
+      font-size: 3rem;
+    }
+  }
+
+  /* ===========================
+     ダークモード
+     =========================== */
+  :global(.dark) .article-title {
+    color: var(--color-text-primary-dark, #f9fafb);
+  }
+
+  :global(.dark) .article-description {
+    color: var(--color-text-secondary-dark, #d1d5db);
+  }
+
+  :global(.dark) .article-date {
+    color: var(--color-text-muted-dark, #9ca3af);
+  }
+
+  :global(.dark) .tag {
+    background: var(--color-bg-secondary-dark, #374151);
+    color: var(--color-text-secondary-dark, #d1d5db);
+  }
+
+  :global(.dark) .tag:hover {
+    background: var(--color-bg-hover-dark, #4b5563);
+  }
+
+  :global(.dark) .back-link {
+    color: var(--color-primary-dark, #60a5fa);
+  }
+</style>
