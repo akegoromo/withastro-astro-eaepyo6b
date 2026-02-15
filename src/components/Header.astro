@@ -1,0 +1,234 @@
+---
+// src/components/Header.astro
+import { getLangFromUrl, useTranslations, useTranslatedPath } from "@/i18n/utils";
+import LanguagePicker from "@/components/LanguagePicker.astro";
+import navigationData from "@/data/navigationData";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
+---
+
+<header class="site-header">
+  <div class="header-container">
+    <div class="header-content">
+      <!-- ロゴ -->
+      <a href={translatePath("/")} class="logo" aria-label={t("main.title")}>
+        <span class="logo-text">{t("main.title")}</span>
+      </a>
+
+      <!-- モバイルメニュートグル -->
+      <button class="mobile-menu-toggle" aria-label={t("menu.toggle")} aria-expanded="false">
+        <span class="hamburger"></span>
+      </button>
+
+      <!-- ナビゲーション -->
+      <nav class="main-nav" aria-label={t("menu.mainNavigation")}>
+        <ul class="nav-list">
+          {navigationData.map((item) => (
+            <li class="nav-item">
+              <a 
+                href={translatePath(item.href)} 
+                class="nav-link"
+                aria-label={t(item.label)}
+              >
+                {t(item.label)}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <!-- 言語切替 -->
+      <div class="language-picker-wrapper">
+        <LanguagePicker />
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    background: var(--color-bg-header, #ffffff);
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .header-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4rem;
+    gap: 1rem;
+  }
+
+  /* ロゴ */
+  .logo {
+    text-decoration: none;
+    color: var(--color-text-primary, #111827);
+    font-size: 1.25rem;
+    font-weight: 700;
+    transition: opacity 0.2s;
+  }
+
+  .logo:hover {
+    opacity: 0.7;
+  }
+
+  .logo-text {
+    display: inline-block;
+  }
+
+  /* モバイルメニュートグル */
+  .mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 60;
+  }
+
+  .hamburger {
+    display: block;
+    width: 1.5rem;
+    height: 0.125rem;
+    background: var(--color-text-primary, #111827);
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .hamburger::before,
+  .hamburger::after {
+    content: "";
+    display: block;
+    width: 1.5rem;
+    height: 0.125rem;
+    background: var(--color-text-primary, #111827);
+    position: absolute;
+    left: 0;
+    transition: transform 0.3s;
+  }
+
+  .hamburger::before {
+    top: -0.5rem;
+  }
+
+  .hamburger::after {
+    top: 0.5rem;
+  }
+
+  .mobile-menu-toggle[aria-expanded="true"] .hamburger {
+    background: transparent;
+  }
+
+  .mobile-menu-toggle[aria-expanded="true"] .hamburger::before {
+    transform: translateY(0.5rem) rotate(45deg);
+  }
+
+  .mobile-menu-toggle[aria-expanded="true"] .hamburger::after {
+    transform: translateY(-0.5rem) rotate(-45deg);
+  }
+
+  /* ナビゲーション */
+  .main-nav {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  .nav-list {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-item {
+    margin: 0;
+  }
+
+  .nav-link {
+    text-decoration: none;
+    color: var(--color-text-secondary, #6b7280);
+    font-weight: 500;
+    transition: color 0.2s;
+    padding: 0.5rem 0;
+    display: block;
+  }
+
+  .nav-link:hover {
+    color: var(--color-primary, #3b82f6);
+  }
+
+  /* 言語切替 */
+  .language-picker-wrapper {
+    flex-shrink: 0;
+  }
+
+  /* レスポンシブ */
+  @media (max-width: 768px) {
+    .mobile-menu-toggle {
+      display: block;
+    }
+
+    .main-nav {
+      position: fixed;
+      top: 4rem;
+      left: 0;
+      right: 0;
+      background: var(--color-bg-header, #ffffff);
+      border-bottom: 1px solid var(--color-border, #e5e7eb);
+      padding: 1rem;
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 0.3s, opacity 0.3s, visibility 0.3s;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-nav.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .nav-list {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .nav-link {
+      padding: 0.75rem 1rem;
+      border-radius: 0.375rem;
+    }
+
+    .nav-link:hover {
+      background: var(--color-bg-secondary, #f3f4f6);
+    }
+  }
+</style>
+
+<script>
+  // モバイルメニュートグル
+  const toggle = document.querySelector('.mobile-menu-toggle') as HTMLButtonElement;
+  const nav = document.querySelector('.main-nav') as HTMLElement;
+
+  if (toggle && nav) {
+    toggle.addEventListener('click', () => {
+      const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!isExpanded));
+      nav.classList.toggle('active');
+    });
+  }
+</script>
