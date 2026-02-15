@@ -105,7 +105,21 @@ export default defineConfig({
   },
   
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    // ===========================
+    // パスエイリアス設定を追加
+    // ===========================
+    resolve: {
+      alias: {
+        '@': '/src',
+        '@components': '/src/components',
+        '@layouts': '/src/layouts',
+        '@styles': '/src/styles',
+        '@assets': '/src/assets',
+        '@data': '/src/data',
+        '@i18n': '/src/i18n',
+      },
+    },
   },
 
     // ===========================

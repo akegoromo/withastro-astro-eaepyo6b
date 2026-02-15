@@ -1,0 +1,189 @@
+---
+// src/components/Footer.astro
+import { getLangFromUrl, useTranslations, useTranslatedPath } from "@/i18n/utils";
+import navigationData from "@/data/navigationData";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const translatePath = useTranslatedPath(lang);
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="footer-container">
+    <div class="footer-content">
+      <!-- フッターロゴとメッセージ -->
+      <div class="footer-brand">
+        <a href={translatePath("/")} class="footer-logo" aria-label={t("main.title")}>
+          <span class="footer-logo-text">{t("main.title")}</span>
+        </a>
+        <p class="footer-description">{t("footer.description")}</p>
+      </div>
+
+      <!-- フッターナビゲーション -->
+      <nav class="footer-nav" aria-label={t("footer.navigation")}>
+        <h3 class="footer-nav-title">{t("footer.links")}</h3>
+        <ul class="footer-nav-list">
+          {navigationData.map((item) => (
+            <li class="footer-nav-item">
+              <a 
+                href={translatePath(item.href)} 
+                class="footer-nav-link"
+                aria-label={t(item.label)}
+              >
+                {t(item.label)}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+
+    <!-- コピーライト -->
+    <div class="footer-bottom">
+      <p class="copyright">
+        &copy; {currentYear} {t("main.title")}. {t("footer.rights")}
+      </p>
+      <p class="powered-by">
+        {t("footer.poweredBy")} <a href="https://astro.build" target="_blank" rel="noopener noreferrer" class="astro-link">Astro</a>
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--color-bg-footer, #1f2937);
+    color: var(--color-text-footer, #e5e7eb);
+    padding: 3rem 1rem 1.5rem;
+    margin-top: 4rem;
+  }
+
+  .footer-container {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* フッターブランド */
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .footer-logo {
+    text-decoration: none;
+    color: var(--color-text-footer, #e5e7eb);
+    font-size: 1.25rem;
+    font-weight: 700;
+    transition: opacity 0.2s;
+    display: inline-block;
+  }
+
+  .footer-logo:hover {
+    opacity: 0.8;
+  }
+
+  .footer-logo-text {
+    display: inline-block;
+  }
+
+  .footer-description {
+    color: var(--color-text-footer-muted, #9ca3af);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* フッターナビゲーション */
+  .footer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .footer-nav-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-footer, #e5e7eb);
+    margin: 0;
+  }
+
+  .footer-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .footer-nav-item {
+    margin: 0;
+  }
+
+  .footer-nav-link {
+    text-decoration: none;
+    color: var(--color-text-footer-muted, #9ca3af);
+    font-size: 0.875rem;
+    transition: color 0.2s;
+    display: inline-block;
+  }
+
+  .footer-nav-link:hover {
+    color: var(--color-primary, #60a5fa);
+  }
+
+  /* フッターボトム */
+  .footer-bottom {
+    padding-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+  }
+
+  .copyright,
+  .powered-by {
+    font-size: 0.875rem;
+    color: var(--color-text-footer-muted, #9ca3af);
+    margin: 0;
+  }
+
+  .astro-link {
+    color: var(--color-primary, #60a5fa);
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+  }
+
+  .astro-link:hover {
+    opacity: 0.8;
+  }
+
+  /* レスポンシブ */
+  @media (max-width: 768px) {
+    .site-footer {
+      padding: 2rem 1rem 1rem;
+    }
+
+    .footer-content {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .footer-bottom {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+  }
+</style>
