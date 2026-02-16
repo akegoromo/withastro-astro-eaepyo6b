@@ -3,7 +3,9 @@ title: "Astro w/ microCMS で 静的Webサイト構築"
 description: "Astro w/ microCMS で 静的Webサイト構築 第一歩"
 pubDate: "2026-01-02T13:21:00.202Z"
 updatedDate: "2026-01-02T13:21:00.202Z"
+
 tags: ["Tech", "Tutorial"]
+isDraft: false
 ---
 
 ## はじめに
