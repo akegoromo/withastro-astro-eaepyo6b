@@ -42,7 +42,7 @@ export const languages = {
       
       // ブログ
       blog: {
-        title: "ブログ",
+        title: "緋衣堂",
         allPosts: "すべての記事",
         readMore: "続きを読む",
         publishedOn: "公開日",
