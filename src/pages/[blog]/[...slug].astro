@@ -180,42 +180,6 @@ const fullUrl = new URL(Astro.url.pathname, siteUrl).toString();
             <TableOfContents headings={headings} lang={lang} />
           </aside>
         </div>
-        <!-- ===========================
-             2カラムレイアウト（本文 + ToC）
-             =========================== -->
-        <!--
-        <div class="article-layout">
-        -->
-          <!-- モバイル用 ToC（記事上部） -->
-        <!--
-          <div class="toc-mobile">
-            <TableOfContents headings={headings} lang={lang} />
-          </div>
-        -->
-          <!-- 記事本文 -->
-        <!--
-          <main class="article-body">
-            <section 
-              id="md-content"
-              class="prose prose-lg dark:prose-invert max-w-none
-                     prose-headings:scroll-mt-20
-                     prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4
-                     prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3
-                     prose-a:text-blue-600 dark:prose-a:text-blue-400
-                     prose-code:text-pink-600 dark:prose-code:text-pink-400
-                     prose-pre:bg-gray-900 dark:prose-pre:bg-gray-950"
-            >
-              <Content />
-            </section>
-          </main>
-        -->          
-          <!-- デスクトップ用 ToC（サイドバー） -->
-        <!--
-          <aside class="toc-desktop">
-            <TableOfContents headings={headings} lang={lang} />
-          </aside>
-        </div>
-      -->
 
         <!-- フッター（記事下のナビゲーション） -->
         <footer class="article-footer">
@@ -403,73 +367,6 @@ const fullUrl = new URL(Astro.url.pathname, siteUrl).toString();
       gap: 4rem;
     }
   }
-
-  /* ===========================
-     2カラムレイアウト
-     =========================== */
-  /*
- .article-layout {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    margin-bottom: 2rem;
-  }
-  */
-  /* モバイル用 ToC */
-  /*
-  .toc-mobile {
-    display: block;
-  }
-  */
-  /* デスクトップ用 ToC */
-  /*
-  .toc-desktop {
-    display: none;
-  }
-  */
-  /* 記事本文 */
-  /*
-  .article-body {
-    flex: 1;
-    min-width: 0;
-    max-width: 100%;
-  }
-  */
-  /* ===========================
-     レスポンシブ（デスクトップ）
-     =========================== */
-  /*
-     @media (min-width: 1024px) {
-    .article-layout {
-      flex-direction: row;
-      gap: 3rem;
-    }
-  */
-    /* モバイル ToC を非表示 */
-  /*
-    .toc-mobile {
-      display: none;
-    }
-  */
-    /* デスクトップ ToC を表示 */
-  /*
-    .toc-desktop {
-      display: block;
-      width: 18rem;
-      flex-shrink: 0;
-    }
-  */
-    /* 記事本文の最大幅 */
-  /*
-    .article-body {
-      max-width: 56rem;
-    }
-
-    .article-title {
-      font-size: 3rem;
-    }
-  }
-  */
 
   /* ===========================
      記事フッター
