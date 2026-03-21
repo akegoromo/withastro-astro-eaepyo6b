@@ -3,7 +3,7 @@ title: "予約投稿を試験"
 description: "Astro w/ microCMS で 静的Webサイト構築 : 日時指定で投稿を予約する"
 pubDate: "2026-01-02T14:31:07.092Z"
 updatedDate: "2026-01-02T14:31:07.092Z"
-
+image: "https://images.microcms-assets.io/assets/d796209b6d98436cafdcc7222a2c89df/9dbc56be7570417abbf5770b28cceacc/astro-ogp-strategy--og.png"
 tags: ["Tech", "Tutorial"]
 isDraft: false
 ---
