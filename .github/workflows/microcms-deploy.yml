@@ -60,21 +60,9 @@ jobs:
       #   env:
       #     MODE: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
 
-      # ===== SNS投稿 =====
-      - name: Post to Social Media
-        id: sns_post
         if: github.event_name == 'repository_dispatch'
-        env:
-          TUMBLR_CONSUMER_KEY: ${{ secrets.TUMBLR_CONSUMER_KEY }}
-          TUMBLR_CONSUMER_SECRET: ${{ secrets.TUMBLR_CONSUMER_SECRET }}
-          TUMBLR_OAUTH_TOKEN: ${{ secrets.TUMBLR_OAUTH_TOKEN }}
-          TUMBLR_OAUTH_SECRET: ${{ secrets.TUMBLR_OAUTH_SECRET }}
-          BLUESKY_IDENTIFIER: ${{ secrets.BLUESKY_IDENTIFIER }}
-          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
         run: |
-          node scripts/post-to-social.js > sns_result.txt 2>&1
           echo "result<<EOF" >> $GITHUB_OUTPUT
-          cat sns_result.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       # ===== ✅ Slack 通知ステップ(成功時) =====
@@ -114,9 +102,7 @@ jobs:
           esac
 
           # SNS投稿結果を取得
-          SNS_STATUS=""
           if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            SNS_STATUS="*SNS投稿:* Tumblr ✅ / Bluesky ✅"
           fi
 
           curl -X POST "$WEBHOOK_URL" \
