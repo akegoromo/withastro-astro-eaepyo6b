@@ -227,11 +227,6 @@
      @apply border-gray-200;
    }
    
-   body {
-     @apply font-sans text-gray-900 antialiased;
-     @apply bg-white;
-   }
-  
 /* ============================================
   ユーティリティクラス拡張
 ============================================ */
@@ -308,6 +303,7 @@
 
 /* テーマ適用 */
 body {
+  @apply font-sans antialiased;
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
 }
