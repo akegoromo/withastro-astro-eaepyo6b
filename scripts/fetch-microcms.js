@@ -114,7 +114,7 @@ function generateMarkdown(post, lang) {
   // 概要フィールドの取得（フォールバック付き）
   // 日本語: description → summary_ja → 空文字
   // 英語: summary_en → description → 空文字
-  const description = lang === '';
+  const description = post.description || '';
   
   const pubDate = post.publishedAt || post.createdAt;
   const updatedDate = post.updatedAt || post.revisedAt;
