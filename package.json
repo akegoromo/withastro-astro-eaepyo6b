@@ -7,15 +7,13 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro",
-    "translate": "node scripts/generate-summary-and-translate.js"
+    "astro": "astro"
   },
   "dependencies": {
     "@astrojs/partytown": "^2.1.4",
     "@astrojs/sitemap": "^3.6.1",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.16.6",
-    "axios": "^1.6.0",
     "rehype-slug": "^6.0.0",
     "tailwindcss": "^4.1.18",
     "unist-util-visit": "^5.1.0"
