@@ -1,15 +1,16 @@
-<button 
+<button
   type="button"
   id="theme-toggle"
   class="theme-toggle"
   aria-label="テーマを切り替える"
   aria-pressed="true"
 >
+
   <span id="theme-toggle-icon" class="theme-toggle-icon">🌙</span>
   <span id="theme-toggle-label" class="theme-toggle-label">Dark</span>
 </button>
 
-<script>
+<script is:inline>
   (() => {
     const root = document.documentElement;
     const button = document.getElementById('theme-toggle');
@@ -33,5 +34,5 @@
       const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       applyTheme(nextTheme);
     });
-  })();  
+  })();
 </script>
