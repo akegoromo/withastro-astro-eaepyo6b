@@ -2,7 +2,7 @@
 // src/layouts/Layout.astro
 import SEO from '../components/SEO.astro';
 import GoogleAnalytics from '../components/GoogleAnalytics.astro';
-
+import ThemeToggle from '../components/ThemeToggle.astro';
 
 export interface Props {
   title: string;
@@ -55,10 +55,22 @@ const GA_MEASUREMENT_ID = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
 	  <!-- ========================================
     	   5. その他のスクリプトやCSS（必要に応じて）
     	   ======================================== -->
+	  <!-- ==== 5.1 darkテーマのチラつきを予防する ===== -->
+	  <script is:inline>
+	  	(() => {
+    	  const savedTheme = localStorage.getItem('theme');
+    	  const theme = savedTheme === 'light' || savedTheme === 'dark'
+      		? savedTheme
+      		: 'dark';
+
+    	  document.documentElement.setAttribute('data-theme', theme);
+  		})();
+	  </script>
 	  <slot name="head" />
 	</head>
 	<body>
 		<slot />
+		<ThemeToggle />
 	</body>
 </html>
 
