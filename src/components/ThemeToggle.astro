@@ -21,6 +21,7 @@
 
     const applyTheme = (theme) => {
       root.setAttribute('data-theme', theme);
+      root.classList.toggle('dark', theme === 'dark');
       localStorage.setItem('theme', theme);
       button.setAttribute('aria-pressed', String(theme === 'dark'));
       icon.textContent = theme === 'dark' ? '🌙' : '☀️';

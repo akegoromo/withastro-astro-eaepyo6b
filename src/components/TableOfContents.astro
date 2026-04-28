@@ -34,10 +34,10 @@ const safeId = (id: string) => id.replace(/[^a-zA-Z0-9-_]/g, '-');
 
 {filteredHeadings.length > 0 && (
   <nav 
-    class="toc-container bg-gray-50 dark:bg-gray-800/90 rounded-lg p-4 mb-6 border-l-4 border-blue-500" 
+  class="toc-container bg-gray-50 dark:bg-gray-900/80 rounded-lg p-4 mb-6 border-l-4 border-blue-500" 
     aria-label={tocTitle}
   >
-    <h2 class="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
+    <h2 class="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-50">
       {tocTitle}
     </h2>
     <ul class="toc-list space-y-1">
@@ -50,7 +50,7 @@ const safeId = (id: string) => id.replace(/[^a-zA-Z0-9-_]/g, '-');
           >
             <a 
               href={`#${heading.slug}`}
-              class="toc-link block py-1.5 px-2 text-sm text-gray-600 dark:text-gray-400 rounded transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              class="toc-link block py-1.5 px-2 text-sm text-gray-700 dark:text-gray-200 rounded transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               data-target={heading.slug}
             >
               {heading.text}
@@ -123,7 +123,7 @@ const safeId = (id: string) => id.replace(/[^a-zA-Z0-9-_]/g, '-');
       animation-fill-mode: both;
     }
 
-    :global(.dark) .toc-link {
+    :global([data-theme="dark"]) .toc-link {
       animation-name: toc-highlight-dark;
     }
   }
@@ -138,7 +138,7 @@ const safeId = (id: string) => id.replace(/[^a-zA-Z0-9-_]/g, '-');
       background-color: rgb(243 244 246 / 1);
     }
 
-    :global(.dark) .toc-link.active {
+    :global([data-theme="dark"]) .toc-link.active {
       color: rgb(229 231 235 / 1);
       background-color: rgb(55 65 81 / 1);
     }
